@@ -3,15 +3,17 @@ import os
 import ast
 from collections import defaultdict, deque
 import re
-import networkx as nx
-import matplotlib as plt
+import sys
 import draw
 from usage import parse_args
 from core.ast_helper import generate_ast
 from cfg import make_cfg
 from core.project_handler import get_modules, get_directory_modules
-
-from build.lib.pyt.web_frameworks import (FrameworkAdaptor, is_django_view_function, is_flask_route_function, is_function, is_function_without_leading_)
+from analysis.constraint_table import initialize_constraint_table
+from analysis.fixed_point import analyse
+from web_frameworks import (FrameworkAdaptor, is_django_view_function, is_flask_route_function, is_function, is_function_without_leading_)
+from vulnerabilities import (find_vulnerabilities, get_vulnerabilities_not_in_baseline)
+from vulnerabilities.vulnerability_helper import SanitisedVulnerability
 
 log = logging.getLogger(__name__)
 connectionMethods = {"Request", "urlopen", "build_opener", "open", "get", "getRequest", "Session", "post"}
@@ -99,7 +101,7 @@ def main(dirname):  # noqa: C901
         local_modules = get_directory_modules(directory)
         tree = generate_ast(path)
         connection_checker = ConnectionChecker()
-        if True:# connection_checker.check_for_connection(tree):
+        if connection_checker.check_for_connection(tree):
             print("file passed connection check")
             try:
                 cfg = make_cfg(tree, project_modules, local_modules, path, allow_local_directory_imports=args.allow_local_imports)
@@ -123,9 +125,10 @@ def main(dirname):  # noqa: C901
                             input_nodes.append(cfg_node)
                 # Get argv
 
+
                 result_set = set()
-                for node in input_nodes:
-                    result_set.add(node)
+                # for node in input_nodes:
+                #    result_set.add(node)
                 for x, n in enumerate(call_nodes):
                     with open("Analysis.txt", "a") as outFile:
                         outFile.write(path + " " + str(x) + "\n")
@@ -134,7 +137,7 @@ def main(dirname):  # noqa: C901
                 numHttp = 0
                 numUserInput = 0
                 input_finder = ArgvChecker()
-                numUserInput += input_finder.find_args(tree)
+                # numUserInput += input_finder.find_args(tree)
                 for node in result_set:
                     if node.label.count("https") > 0:
                         numHttps += 1
@@ -148,6 +151,50 @@ def main(dirname):  # noqa: C901
             except Exception as err:
                 print("There was an error : " + "[" + str(path) + "]" + str(err))
                 F += 1
+        cfg_list = [cfg]
+
+        framework_route_criteria = is_function
+        if args.adaptor:
+            if args.adaptor.lower().startswith('e'):
+                framework_route_criteria = is_function
+            elif args.adaptor.lower().startswith('p'):
+                framework_route_criteria = is_function_without_leading_
+            elif args.adaptor.lower().startswith('d'):
+                framework_route_criteria = is_django_view_function
+
+        # Add all the route functions to the cfg_list
+        FrameworkAdaptor(
+            cfg_list,
+            project_modules,
+            local_modules,
+            framework_route_criteria
+        )
+    initialize_constraint_table(cfg_list)
+    log.info("Analysing")
+    analyse(cfg_list)
+    log.info("Finding vulnerabilities")
+    vulnerabilities = find_vulnerabilities(
+        cfg_list,
+        args.blackbox_mapping_file,
+        args.trigger_word_file,
+        args.interactive,
+        nosec_lines
+    )
+
+    if args.baseline:
+        vulnerabilities = get_vulnerabilities_not_in_baseline(
+            vulnerabilities,
+            args.baseline
+        )
+
+    args.formatter.report(vulnerabilities, args.output_file, not args.only_unsanitised)
+
+    has_unsanitised_vulnerabilities = any(
+        not isinstance(v, SanitisedVulnerability)
+        for v in vulnerabilities
+    )
+    if has_unsanitised_vulnerabilities:
+        sys.exit(1)
 
 
 def reverse_traverse(node, file):
@@ -163,8 +210,12 @@ def reverse_traverse(node, file):
                 linked_list.append(parent)
                 visited.add(parent)
         file.write(node.__repr__() + "\n")
-        if node.label.count("http") > 0:
+        if node.label.count("http") > 0 and isinstance(node.ast_node, ast.Assign) and has_url(node.label):
             result_set.add(node)
+        for name in userInput:
+            if node.label.count(name) > 0:
+                # print("Found one: " + node.label)
+                result_set.add(node)
     return result_set
 
 
@@ -220,6 +271,12 @@ def is_user_input(node):
     elif isinstance(node.func, ast.Attribute) and node.func.attr in userInput:
         return True
     return False
+
+
+def has_url(possible_url):
+    urls = re.findall(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', possible_url)
+    # print(urls)
+    return len(urls) > 0
 
 
 class ArgvChecker(ast.NodeVisitor):

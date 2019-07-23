@@ -3,7 +3,7 @@ import Analyzer
 
 
 def main():
-    # '''
+    '''
     folders = []
     for (dirname, dirs, files) in os.walk("C:\\Users\\anivr\\Desktop\\AutoDownload"):
         folders = dirs
@@ -19,8 +19,8 @@ def main():
         except Exception as err:
             print("There was an error : " + "[" + str(folder) + "]" + str(err))
     print(str(Analyzer.S / (Analyzer.S + Analyzer.F)))
-    # '''
-    # Analyzer.main("C:\\Users\\anivr\\Desktop\\AutoDownload\\weather.yahoo")
+    '''
+    Analyzer.main("C:\\Users\\anivr\\Desktop\\AutoDownload\\service.subtitles.opensubtitles\\service.py")
 
 
 
