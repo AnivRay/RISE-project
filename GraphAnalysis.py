@@ -3,9 +3,9 @@ import Analyzer
 
 
 def main():
-    #'''
+    # '''
     folders = []
-    for (dirname, dirs, files) in os.walk("C:\\Users\\anivr\\Desktop\\AutoDownload2"):
+    for (dirname, dirs, files) in os.walk("C:\\Users\\anivr\\Desktop\\AutoDownload"):
         folders = dirs
         for x, f in enumerate(folders):
             folders[x] = dirname + "\\" + f
@@ -19,18 +19,11 @@ def main():
         except Exception as err:
             print("There was an error : " + "[" + str(folder) + "]" + str(err))
     print(str(Analyzer.S / (Analyzer.S + Analyzer.F)))
-    #'''
-    #Analyzer.main("node")
-    # Analyzer.main("C:\\Users\\anivr\\Desktop\\AutoDownload\\plugin.video.youtube\\resources\\lib", "youtube_resolver.py")
+    # '''
+    # Analyzer.main("C:\\Users\\anivr\\Desktop\\AutoDownload\\weather.yahoo")
 
 
-'''
-call the functions here
-CFG
-running ur analysis for finding the path between network calls to variables
-and then add the interesting ones to a list of lists
-get the stats
-'''
+
 
 
 main()
