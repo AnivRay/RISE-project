@@ -33,3 +33,8 @@
 - Created visualization of cfg using the graphviz add-on
 - Added detection of user input to the graph analysis
   - Can detect user input in the OpenSubtitles add-on
+
+07/23/19
+- Validated that detected urls are real urls
+- Found connection between user input and connection methods by tracing back the cfg
+- Started implementing the taint analysis to find vulnerabilities
