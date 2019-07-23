@@ -28,3 +28,8 @@
 - Expanded definitions of connection methods and connection classes to more accurately identify connection methods
 - Identified the vulnerability in the OpenSubtitles add-on and why the cfg is not detecting it
 - Problem: The CFG maker can not find function calls that are not directly called in the file
+
+07/22/19
+- Created visualization of cfg using the graphviz add-on
+- Added detection of user input to the graph analysis
+  - Can detect user input in the OpenSubtitles add-on
