@@ -11,7 +11,7 @@ from cfg import make_cfg
 from core.project_handler import get_modules, get_directory_modules
 from analysis.constraint_table import initialize_constraint_table
 from analysis.fixed_point import analyse
-from web_frameworks import (FrameworkAdaptor, is_django_view_function, is_flask_route_function, is_function, is_function_without_leading_)
+from web_frameworks import (FrameworkAdaptor, is_user_input_function, is_django_view_function, is_flask_route_function, is_function, is_function_without_leading_)
 from vulnerabilities import (find_vulnerabilities, get_vulnerabilities_not_in_baseline)
 from vulnerabilities.vulnerability_helper import SanitisedVulnerability
 
@@ -89,6 +89,7 @@ def main(dirname):  # noqa: C901
         directory = os.path.normpath(args.project_root)
         project_modules = get_modules(directory, prepend_module_root=args.prepend_module_root)
 
+    cfg_list = list()
     for path in sorted(files):
         print(path)
         log.info("Processing %s", path)
@@ -123,16 +124,13 @@ def main(dirname):  # noqa: C901
                             call_nodes.append(cfg_node)
                         elif is_user_input(ast_node):
                             input_nodes.append(cfg_node)
-                # Get argv
-
-
                 result_set = set()
                 # for node in input_nodes:
                 #    result_set.add(node)
                 for x, n in enumerate(call_nodes):
-                    with open("Analysis.txt", "a") as outFile:
-                        outFile.write(path + " " + str(x) + "\n")
-                        result_set.update(reverse_traverse(n, outFile))
+                    # with open("Analysis.txt", "a") as outFile:
+                    # outFile.write(path + " " + str(x) + "\n")
+                    result_set.update(reverse_traverse(n))
                 numHttps = 0
                 numHttp = 0
                 numUserInput = 0
@@ -153,14 +151,7 @@ def main(dirname):  # noqa: C901
                 F += 1
         cfg_list = [cfg]
 
-        framework_route_criteria = is_function
-        if args.adaptor:
-            if args.adaptor.lower().startswith('e'):
-                framework_route_criteria = is_function
-            elif args.adaptor.lower().startswith('p'):
-                framework_route_criteria = is_function_without_leading_
-            elif args.adaptor.lower().startswith('d'):
-                framework_route_criteria = is_django_view_function
+        framework_route_criteria = is_function  # is_user_input_function
 
         # Add all the route functions to the cfg_list
         FrameworkAdaptor(
@@ -169,6 +160,10 @@ def main(dirname):  # noqa: C901
             local_modules,
             framework_route_criteria
         )
+        with open("result_cfg.txt", "w") as outFile:
+            for def_cfg in cfg_list:
+                outFile.write("New cfg in cfg_list \n")
+                outFile.write(def_cfg.__repr__())
     initialize_constraint_table(cfg_list)
     log.info("Analysing")
     analyse(cfg_list)
@@ -197,7 +192,7 @@ def main(dirname):  # noqa: C901
         sys.exit(1)
 
 
-def reverse_traverse(node, file):
+def reverse_traverse(node, file=None):
     result_set = set()
     linked_list = deque()
     visited = set()
@@ -209,7 +204,8 @@ def reverse_traverse(node, file):
             if parent not in visited:
                 linked_list.append(parent)
                 visited.add(parent)
-        file.write(node.__repr__() + "\n")
+        if file is not None:
+            file.write(node.__repr__() + "\n")
         if node.label.count("http") > 0 and isinstance(node.ast_node, ast.Assign) and has_url(node.label):
             result_set.add(node)
         for name in userInput:
@@ -269,6 +265,8 @@ def is_user_input(node):
     if isinstance(node.func, ast.Name) and node.func.id in userInput:
         return True
     elif isinstance(node.func, ast.Attribute) and node.func.attr in userInput:
+        return True
+    elif isinstance(node, ast.Attribute) and node.value.id == "sys" and node.attr == "argv":
         return True
     return False
 

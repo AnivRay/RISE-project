@@ -21,7 +21,7 @@ def main():
     print(str(Analyzer.S / (Analyzer.S + Analyzer.F)))
     '''
     Analyzer.main("C:\\Users\\anivr\\Desktop\\AutoDownload\\service.subtitles.opensubtitles\\service.py")
-
+    # Analyzer.main("C:\\Users\\anivr\\Desktop\\AutoDownload\\weather.yahoo\\default.py")
 
 
 
