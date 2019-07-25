@@ -38,3 +38,8 @@
 - Validated that detected urls are real urls
 - Found connection between user input and connection methods by tracing back the cfg
 - Started implementing the taint analysis to find vulnerabilities
+
+07/24/19
+- Examined the Taint Analysis propagation method
+- Altered Source/Sink definitions to detect user input as a source and connection methods/file executions as sinks
+
