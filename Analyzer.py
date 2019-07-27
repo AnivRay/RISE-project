@@ -104,16 +104,12 @@ def main(dirname):  # noqa: C901
         connection_checker = ConnectionChecker()
         if connection_checker.check_for_connection(tree):
             print("file passed connection check")
+            cfg = make_cfg(tree, project_modules, local_modules, path,
+                           allow_local_directory_imports=args.allow_local_imports)
             try:
                 cfg = make_cfg(tree, project_modules, local_modules, path, allow_local_directory_imports=args.allow_local_imports)
                 print("cfg made")
                 # draw.draw_cfg(cfg, "test_output")
-                '''
-                with open("result_cfg2.txt", "a") as test_file:
-                    test_file.write(path + "\n")
-                    for node in cfg.nodes:
-                        test_file.write(node.__repr__() + "\n")
-                '''
                 S += 1
                 call_nodes = []
                 input_nodes = []
@@ -213,18 +209,6 @@ def reverse_traverse(node, file=None):
                 # print("Found one: " + node.label)
                 result_set.add(node)
     return result_set
-
-
-'''
-def draw_cfg():
-    
-    G = nx.Graph()
-    G.add_node(1)
-    nx.draw(G, with_labels=True, font_weight="bold")
-    nx.
-    
-    draw.draw_cfg()
-'''
 
 
 def traverse(node, graph):
