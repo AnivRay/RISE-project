@@ -43,3 +43,13 @@
 - Examined the Taint Analysis propagation method
 - Altered Source/Sink definitions to detect user input as a source and connection methods/file executions as sinks
 
+07/25/19
+- Sucessfully tracked user input to connection methods
+- Found out how the Taint analysis worked
+
+07/26/19
+- Changed cfg code to convert "with as" statements to "assignment" statements
+- Identified issue in Opensubtile add-on using cfg
+- Problem: the issue in Opensubtiles is still not correctly determined to be a vulnerability
+
+
