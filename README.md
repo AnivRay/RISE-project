@@ -52,4 +52,18 @@
 - Identified issue in Opensubtile add-on using cfg
 - Problem: the issue in Opensubtiles is still not correctly determined to be a vulnerability
 
+07/29/19
+- Fixed issue in Taint Analysis allowing it to find the vulnerability in Opensubtitles
+- Ran analysis on other downloaded add-ons
 
+07/30/19
+- Some possible vulnerabilities identified in other add-ons
+- Started abstract
+
+07/31/19
+- Finished abstract
+
+08/01/19
+- Downloaded another set of over 100 add-ons and ran analysis on them
+- Continued issue with AST and CFG not parsing some files
+- Manually looked for vulnerabilities in files that the analysis already identified
